@@ -168,9 +168,19 @@ export default function RootLayout({
         </Script>
 
         {/* Sync mobile viewport state into a cookie so server components can
-            strictly paginate 10 items for mobile views and 24 items for desktop views. */}
+            strictly paginate 10 items for mobile views and 24 items for desktop views.
+
+            The reload it triggers is guarded twice (Nov 2026). It used to
+            reload whenever the cookie disagreed with the viewport - and a
+            client that cannot keep cookies (blocked, or a headless renderer
+            with a narrow window and a desktop UA) never agrees, so it
+            reloaded forever: a full page and every asset, per loop.
+            1. The cookie is read back after writing; if it did not stick,
+               reloading cannot help, so it does not.
+            2. At most 3 reloads per tab session (sessionStorage), so even a
+               window dragged back and forth across 768px cannot loop. */}
         <Script id="kozy-viewport-cookie" strategy="beforeInteractive">
-          {`(function(){try{function check(){var m=window.innerWidth<768?'1':'0';var match=document.cookie.match(/(?:^|; )kozy_is_mobile=([^;]*)/);var current=match?match[1]:null;if(current!==m){document.cookie='kozy_is_mobile='+m+'; path=/; max-age=31536000; SameSite=Lax';var isMobileUA=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent);if(current!==null||(m==='1'&&!isMobileUA)){window.location.reload();}}}check();window.addEventListener('resize',function(){clearTimeout(window.__kzResize);window.__kzResize=setTimeout(check,250);});}catch(e){}})()`}
+          {`(function(){try{var R='kozy:vp-reloads';function read(){var x=document.cookie.match(/(?:^|; )kozy_is_mobile=([^;]*)/);return x?x[1]:null}function check(){var m=window.innerWidth<768?'1':'0';var current=read();if(current===m)return;document.cookie='kozy_is_mobile='+m+'; path=/; max-age=31536000; SameSite=Lax';if(read()!==m)return;var isMobileUA=/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(navigator.userAgent);if(!(current!==null||(m==='1'&&!isMobileUA)))return;var n=0;try{n=Number(sessionStorage.getItem(R))||0;if(n>=3)return;sessionStorage.setItem(R,String(n+1))}catch(e){return}window.location.reload()}check();window.addEventListener('resize',function(){clearTimeout(window.__kzResize);window.__kzResize=setTimeout(check,250)})}catch(e){}})()`}
         </Script>
       </head>
       <body className="flex min-h-screen flex-col bg-paper text-ink antialiased">

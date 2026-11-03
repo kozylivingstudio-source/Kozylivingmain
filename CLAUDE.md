@@ -1610,6 +1610,18 @@ What changed, and the rules that keep it fixed:
   before asking Shopify. `/[page]` is a root catch-all, so every scanner
   probe (`/wp-login.php`, `/.env`) lands there.
 - **Preview deployments serve `Disallow: /`** (`VERCEL_ENV` in `robots.ts`).
+- **The viewport-cookie bootstrap cannot loop.** It reloaded whenever the
+  `kozy_is_mobile` cookie disagreed with the window, so a client that cannot
+  keep cookies reloaded forever. It now reads the cookie back before
+  reloading and caps reloads at 3 per tab session (`kozy:vp-reloads` in
+  sessionStorage). Measured: cookies blocked → 1 load; first phone-width
+  visit with a desktop UA → exactly 1 corrective reload.
+- **Who the traffic was** (Usage → Edge Requests, 2026-11-01..03): 763,758
+  requests, 56.8% entering at `cle1` (Ohio) and 42.4% at `iad1` (Virginia),
+  only 1,869 (0.2%) at `bom1` (Mumbai). Edge regions, unlike Fast Origin
+  Transfer, follow the client, so 99% came from US-East data centres (the
+  AWS/cloud regions crawlers run in), not Indian shoppers. Active CPU was
+  11h 1m against Hobby's 4h.
 - **Shopify side:** `shop.kozyliving.in` is Shopify's primary domain (and
   checkout) and runs the `Forward to headless` theme, which JS-redirects to
   `kozyliving.in`. While Vercel is down that sends shoppers to a dead site.
