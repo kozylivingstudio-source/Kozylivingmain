@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 import { ArrowLongLeftIcon, ArrowLongRightIcon } from "@heroicons/react/24/outline";
 
@@ -77,7 +77,7 @@ export default function Pagination({
             <Link
               href={hrefFor(page - 1)}
               scroll={scroll}
-              rel="prev"
+              rel="prev nofollow"
               className={clsx(step, "border-ink/15 hover:border-ink hover:bg-ink hover:text-paper")}
             >
               <ArrowLongLeftIcon aria-hidden className="h-4 w-4" />
@@ -106,6 +106,7 @@ export default function Pagination({
                 href={hrefFor(item)}
                 scroll={scroll}
                 prefetch={false}
+                rel="nofollow"
                 aria-label={`Page ${item}`}
                 aria-current={item === page ? "page" : undefined}
                 className={clsx(
@@ -126,7 +127,7 @@ export default function Pagination({
             <Link
               href={hrefFor(page + 1)}
               scroll={scroll}
-              rel="next"
+              rel="next nofollow"
               className={clsx(step, "border-ink/15 hover:border-ink hover:bg-ink hover:text-paper")}
             >
               <span className="hidden sm:inline">Next</span>

@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useRef } from "react";
 import { CheckIcon } from "@heroicons/react/24/outline";
 import type { Swatch } from "@/lib/shop/colours";

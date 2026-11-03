@@ -5,10 +5,11 @@ import Breadcrumb from "@/components/ui/breadcrumb";
 import CircledWord from "@/components/ui/circled-word";
 import { Eyebrow, Headline } from "@/components/ui/section";
 import { sameOption } from "@/lib/shop/kit";
+import { queryPageMetadata } from "@/lib/shop/seo";
 import { getKitBuilder } from "@/lib/shopify";
 import type { KitBuilder as KitData } from "@/lib/shopify/types";
 import { kitBuilder as copy } from "@/lib/site";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 
 /* ---------------------------------------------------------------------------
    /kit-builder
@@ -24,13 +25,20 @@ import Link from "next/link";
    that does not match the live kit is dropped, never a 404.
 --------------------------------------------------------------------------- */
 
-export const metadata: Metadata = {
-  title: copy.eyebrow,
-  description: copy.intro,
-  openGraph: { type: "website" },
-};
-
 type Search = { [key: string]: string | string[] | undefined };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<Search>;
+}): Promise<Metadata> {
+  return {
+    title: copy.eyebrow,
+    description: copy.intro,
+    openGraph: { type: "website" },
+    ...queryPageMetadata("/kit-builder", await searchParams),
+  };
+}
 
 function one(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;

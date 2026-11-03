@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import type { IconType } from "react-icons";
 import { GiPawPrint, GiSparkles } from "react-icons/gi";
 import type { Menu } from "@/lib/shopify/types";

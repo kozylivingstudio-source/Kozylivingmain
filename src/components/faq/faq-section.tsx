@@ -10,7 +10,7 @@ import {
 import { getAddOns, getCollections } from "@/lib/shopify";
 import type { Product, ProductAddOn } from "@/lib/shopify/types";
 import { faq } from "@/lib/site";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import FaqBoard, { HomeFaqBoard } from "./faq-board";
 
 /**

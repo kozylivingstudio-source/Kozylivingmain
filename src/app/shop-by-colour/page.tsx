@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import Grid from "@/components/grid";
@@ -22,6 +22,7 @@ import {
   toParamMap,
   type ShopSearchParams,
 } from "@/lib/shop/filters";
+import { queryPageMetadata } from "@/lib/shop/seo";
 import { isMobileRequest } from "@/lib/shop/viewport";
 import { getCatalog, getColourPalette } from "@/lib/shopify";
 import { shelfPaging } from "@/lib/site";
@@ -72,11 +73,18 @@ import { shelfPaging } from "@/lib/site";
 const GRID_SIZES =
   "(min-width: 1280px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw";
 
-export const metadata: Metadata = {
-  title: "Shop by Kolour",
-  description:
-    "Start with a kolour. Rose Pink, Indigo Blue, Tulsi Green, Oat Milk, White and Sage Green - pick the shade your home already lives in, and see the Kompanions krafted in it.",
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<ShopSearchParams>;
+}): Promise<Metadata> {
+  return {
+    title: "Shop by Kolour",
+    description:
+      "Start with a kolour. Rose Pink, Indigo Blue, Tulsi Green, Oat Milk, White and Sage Green - pick the shade your home already lives in, and see the Kompanions krafted in it.",
+    ...queryPageMetadata("/shop-by-colour", await searchParams),
+  };
+}
 
 export default async function ShopByColourPage({
   searchParams,

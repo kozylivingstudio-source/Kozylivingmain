@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 
 /**
  * The trail that opens a standalone editorial page - `Home / About us`, set

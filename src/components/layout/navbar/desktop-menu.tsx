@@ -2,7 +2,7 @@
 
 import type { Menu } from "@/lib/shopify/types";
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -53,7 +53,6 @@ export default function DesktopMenu({ menu }: { menu: Menu[] }) {
           >
             <Link
               href={item.path}
-              prefetch
               aria-haspopup={hasChildren ? "menu" : undefined}
               aria-expanded={hasChildren ? isOpen : undefined}
               aria-current={current ? "page" : undefined}
@@ -114,7 +113,6 @@ export default function DesktopMenu({ menu }: { menu: Menu[] }) {
                     <li key={child.title}>
                       <Link
                         href={child.path}
-                        prefetch
                         className="block whitespace-nowrap rounded-xl px-3 py-2 text-ui text-ink/80 transition-colors hover:bg-wash hover:text-ink"
                       >
                         {child.title}

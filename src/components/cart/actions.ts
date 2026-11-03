@@ -4,7 +4,6 @@ import {
   ADDON_PARENT_ATTRIBUTE,
   KIT_ATTRIBUTE,
   MAX_LINE_QUANTITY,
-  TAGS,
 } from "@/lib/constants";
 import { isValidInitials } from "@/lib/shop/add-ons";
 import { findKitVariant, isKitLine, type KitRequest } from "@/lib/shop/kit";
@@ -35,7 +34,6 @@ import {
   buyNow as buyNowCopy,
   kitBuilder as kitCopy,
 } from "@/lib/site";
-import { updateTag } from "next/cache";
 import { cookies } from "next/headers";
 
 export type CartActionState = {
@@ -100,6 +98,23 @@ async function resolveCart(): Promise<ResolvedCart> {
   }
 
   return { cartId: undefined, cart: undefined };
+}
+
+/**
+ * The cart behind the cookie, for the browser. `CartProvider` calls this once
+ * per page load and again after every mutation.
+ *
+ * The cart used to be read in the root layout, and that one `cookies()` call
+ * made EVERY page on the site render per request - nothing could be served
+ * from the CDN, and crawlers walking the shop burned the Hobby plan's Fast
+ * Origin Transfer in two days (Nov 2026). Moving the read here is what lets
+ * pages be static/ISR. It is a few KB, against a 400-800 KB page render.
+ *
+ * Throws rather than returning `undefined` on a Shopify failure, so the
+ * provider can keep the cart it has instead of showing an empty one.
+ */
+export async function readCart(): Promise<Cart | undefined> {
+  return (await resolveCart()).cart;
 }
 
 function clampQuantity(quantity: number): number {
@@ -419,20 +434,15 @@ export async function addItem(
       ));
     }
 
-    // `updateTag`, not `revalidateTag`. Next 16 deliberately withholds the
-    // re-rendered RSC payload when `revalidateTag` is given a cache profile
-    // ("so that server actions don't pull their own writes"), so the root
-    // layout never re-runs, the cart promise never changes, and the optimistic
-    // state snaps back to the pre-action cart. `updateTag` expires the entry
-    // immediately AND marks the path revalidated, which is what makes the cart
-    // update without a reload.
-    updateTag(TAGS.cart);
-
+    // No `updateTag` / `revalidatePath` here or in any cart action. The cart
+    // is no longer server-rendered: `CartProvider.runCartMutation` re-reads
+    // it with `readCart()` after every action. Marking the path revalidated
+    // would make each click re-render the whole page (400-800 KB) into the
+    // action response for nothing.
     return ok(describeWarnings(warnings));
   } catch (error) {
     // A failed add can still have changed the cart (a rollback that itself
-    // failed), so the drawer re-reads either way.
-    updateTag(TAGS.cart);
+    // failed); the provider re-reads it after every action either way.
     return fail(
       toMessage(
         error,
@@ -667,7 +677,6 @@ export async function addKitItem(
       return { ok: true as const, warnings: added.warnings, clamped: false };
     });
 
-    updateTag(TAGS.cart);
     if (!outcome.ok) return fail(outcome.message);
     return ok(
       outcome.clamped
@@ -676,8 +685,7 @@ export async function addKitItem(
     );
   } catch (error) {
     // A failed add can still have changed the cart (a rollback that itself
-    // failed), so the drawer re-reads either way.
-    updateTag(TAGS.cart);
+    // failed); the provider re-reads it after every action either way.
     return fail(toMessage(error, kitCopy.errors.failed));
   }
 }
@@ -763,10 +771,8 @@ export async function addPreferredItem(payload: {
       addToCart(cartId, [{ merchandiseId: variant.id, quantity: 1 }])
     );
 
-    updateTag(TAGS.cart);
     return { ok: true, message: describeWarnings(warnings), variantId: variant.id };
   } catch (error) {
-    updateTag(TAGS.cart);
     return {
       ok: false,
       message: toMessage(error, "We couldn't add that to your cart."),
@@ -835,7 +841,6 @@ export async function changeLineVariant(payload: {
     const { cartId, cart } = await resolveCart();
     const line = cart?.lines.find((candidate) => candidate.id === lineId);
     if (!cartId || !line) {
-      updateTag(TAGS.cart);
       return fail("That item is no longer in your cart.");
     }
     if (line.merchandise.id === merchandiseId) return ok();
@@ -851,10 +856,8 @@ export async function changeLineVariant(payload: {
       { id: lineId, merchandiseId, quantity: line.quantity },
     ]);
 
-    updateTag(TAGS.cart);
     return ok(describeWarnings(warnings));
   } catch (error) {
-    updateTag(TAGS.cart);
     return fail(toMessage(error, "We couldn't change that option."));
   }
 }
@@ -1019,7 +1022,6 @@ export async function updateItemQuantity(
     if (!cartId || !cart) {
       // Nothing to update against, and nothing was lost - the cart is already
       // empty from the customer's point of view.
-      updateTag(TAGS.cart);
       return quantity === 0
         ? ok()
         : fail("Your cart expired. Please add the item again.");
@@ -1030,7 +1032,6 @@ export async function updateItemQuantity(
     if (!line) {
       // Removed in another tab, or by a click still in flight: the desired
       // end state for a removal, a real failure for anything else.
-      updateTag(TAGS.cart);
       return quantity === 0
         ? ok()
         : fail("That item is no longer in your cart.");
@@ -1081,7 +1082,6 @@ export async function updateItemQuantity(
       }
     }
 
-    updateTag(TAGS.cart);
     return ok(describeWarnings(warnings));
   } catch (error) {
     return fail(toMessage(error, "We couldn't update that quantity."));
@@ -1104,7 +1104,6 @@ export async function removeItem(
     const { cartId, cart } = await resolveCart();
 
     if (!cartId || !cart) {
-      updateTag(TAGS.cart);
       return ok();
     }
 
@@ -1120,7 +1119,6 @@ export async function removeItem(
       await removeFromCart(cartId, [lineId]);
     }
 
-    updateTag(TAGS.cart);
     return ok();
   } catch (error) {
     return fail(toMessage(error, "We couldn't remove that item."));

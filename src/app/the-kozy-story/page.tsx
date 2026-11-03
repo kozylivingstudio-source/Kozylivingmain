@@ -13,7 +13,7 @@ import ChapterScatter from "@/components/story/chapter-scatter";
 import FibreList, { type FibreKompanion } from "@/components/story/fibre-list";
 import StoryHeroGrid from "@/components/story/story-hero-grid";
 import { ArrowUpRight } from "@/components/ui/arrow-badge";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { imageKey } from "@/lib/shop/gallery";
 import { getCollectionProducts, getProduct } from "@/lib/shopify";
 import { aboutStory, kozyStory, whyKraft } from "@/lib/site";

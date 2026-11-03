@@ -2,7 +2,7 @@
 
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "@/components/ui/shop-image";
 import { Eyebrow, Headline } from "@/components/ui/section";

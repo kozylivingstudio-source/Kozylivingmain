@@ -13,10 +13,9 @@ import MotionProvider from "@/components/motion/motion-provider";
 import LoadingScreen from "@/components/motion/loading-screen";
 import RouteProgress from "@/components/motion/route-progress";
 import NewsletterPopup from "@/components/newsletter/newsletter-popup";
-import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { getCart } from "@/lib/shopify";
 import { site } from "@/lib/site";
+import { SITE_URL } from "@/lib/site-url";
 
 /**
  * Franxurter - the display face, self-hosted so it never flashes or shifts.
@@ -60,11 +59,7 @@ const jakarta = localFont({
   fallback: ["Inter", "system-ui", "sans-serif"],
 });
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : "http://localhost:3000");
+const baseUrl = SITE_URL;
 
 const logoUrl = new URL("/logo/kozy-logo-web.png", baseUrl).toString();
 
@@ -117,19 +112,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+/**
+ * ⚠️ Nothing in this layout - or in anything it renders on every page (Navbar,
+ * Footer, NewsletterBand) - may read `cookies()`, `headers()` or make a
+ * `no-store` fetch. Any one of them makes EVERY route dynamic: no page is
+ * cached at the CDN and each view is a function render. That is how the
+ * Hobby plan's Fast Origin Transfer went in two days (Nov 2026). The cart and
+ * the account link used to read cookies here; the cart is now read by the
+ * browser and the account link always goes to `/account`. Check `next
+ * build`: content routes should not be `ƒ`.
+ */
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cartId = (await cookies()).get("cartId")?.value;
-  // The promise is handed to a client component that unwraps it with `use()`,
-  // so a rejection surfaces at the root and blanks the whole site. Degrade to
-  // an empty cart instead - every other page still works without one.
-  const cart = getCart(cartId).catch((error) => {
-    console.error("Failed to load cart", error);
-    return undefined;
-  });
   return (
     <html lang="en" className={`${franxurter.variable} ${jakarta.variable}`}>
       <head>
@@ -188,7 +185,7 @@ export default async function RootLayout({
         </Suspense>
         <SmoothScrollProvider>
           <MotionProvider />
-          <CartProvider cartPromise={cart}>
+          <CartProvider>
             <Navbar />
             <main className="flex-1">{children}</main>
             <NewsletterBand />

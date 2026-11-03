@@ -5,9 +5,8 @@ import DesktopMenu from "./desktop-menu";
 import SearchTrigger from "./search";
 import LogoSquare from "@/components/logo-square";
 import CartModal from "@/components/cart/modal";
-import { getCustomerSession } from "@/lib/customer-account";
 import { announcement, site } from "@/lib/site";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { UserIcon } from "@heroicons/react/24/outline";
 import HeaderHeight from "./header-height";
 
@@ -25,10 +24,11 @@ import HeaderHeight from "./header-height";
  * on the row). Phones keep the centred mark, where it fits and reads best.
  */
 export async function Navbar() {
-  const [menu, customerSession] = await Promise.all([
-    getPrimaryMenu(),
-    getCustomerSession(),
-  ]);
+  // No customer-session read here: the header is on every page, and a
+  // `cookies()` call in it makes every page uncacheable (see the note on
+  // RootLayout). The account link always goes to `/account`, which shows
+  // the sign-in panel to a signed-out visitor.
+  const menu = await getPrimaryMenu();
 
   return (
     <header
@@ -71,21 +71,13 @@ export async function Navbar() {
             <SearchTrigger menu={menu} />
             <CartModal />
             <Link
-              href={
-                customerSession.isAuthenticated
-                  ? "/account"
-                  : "/api/auth/login?returnTo=/account"
-              }
-              // Never prefetched. Signed out, this is a route handler that
-              // mints a fresh PKCE verifier + state cookie and redirects to
-              // Shopify - so a prefetch on every page view ran the login flow
-              // for every visitor, failed CORS on the cross-origin redirect,
-              // and could overwrite the verifier of a sign-in already in
-              // progress in another tab, breaking its callback.
+              href="/account"
+              // Never prefetched: `/account` is per-customer and renders on
+              // a function, so a prefetch on every page view is a function
+              // call per visitor. (It used to point signed-out visitors at
+              // the login route handler, where a prefetch ran the PKCE flow.)
               prefetch={false}
-              aria-label={
-                customerSession.isAuthenticated ? "Account" : "Sign in"
-              }
+              aria-label="Account"
               className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full border border-ink/15 bg-card transition-colors hover:bg-ink hover:text-paper"
             >
               <UserIcon aria-hidden className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

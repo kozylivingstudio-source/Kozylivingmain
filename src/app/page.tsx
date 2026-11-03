@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { Suspense } from "react";
 import {
   getArticles,

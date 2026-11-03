@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useId, useState } from "react";
 import { ArrowUpRight } from "@/components/ui/arrow-badge";
 import type { FaqItem, FaqTopic } from "@/lib/shop/faq";

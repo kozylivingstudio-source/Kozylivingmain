@@ -4,7 +4,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import NextImage from "next/image";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
@@ -181,7 +181,6 @@ export default function ProductCard({
           {/* Card's main navigation link overlay */}
           <Link
             href={href}
-            prefetch
             aria-label={product.title}
             className="absolute inset-0 z-10"
           />
@@ -265,7 +264,7 @@ export default function ProductCard({
         {/* Title and Price Row */}
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="ui-mono font-semibold text-ink text-sm sm:text-base leading-snug">
-            <Link href={href} prefetch className="hover:underline">
+            <Link href={href} className="hover:underline">
               {product.title}
             </Link>
           </h3>

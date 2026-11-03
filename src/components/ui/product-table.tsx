@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import Price from "../price";
 import { Product } from "@/lib/shopify/types";
 import QuickAdd from "./quick-add";
@@ -92,7 +92,6 @@ export default function ProductTable({ products }: { products: Product[] }) {
                 <th scope="row" className="px-4 py-4 font-normal">
                   <Link
                     href={`/product/${product.handle}`}
-                    prefetch
                     className="spec-mono hover:underline"
                   >
                     {product.title}

@@ -1,5 +1,5 @@
 import Image from "@/components/ui/shop-image";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 
 /**

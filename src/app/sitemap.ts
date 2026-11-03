@@ -5,76 +5,71 @@ import {
   getPages,
   getProducts,
 } from "@/lib/shopify";
+import { SITE_URL } from "@/lib/site-url";
 import { MetadataRoute } from "next";
 
-type Route = {
-  url: string;
-  lastModified: string;
-};
+// Rebuilt at most hourly and served from the CDN. It was `force-dynamic`,
+// i.e. five Shopify queries per crawler visit, and every URL in it pointed
+// at the starter template's `demo-next-store.pages.dev`.
+export const revalidate = 3600;
 
-// const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-//   ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-//   : "http://localhost:3000";
-
-const baseUrl = "https://demo-next-store.pages.dev/";
-export const dynamic = "force-dynamic";
+/** Routes built in this repo rather than from Shopify data. */
+const STATIC_ROUTES = [
+  "",
+  "/search",
+  "/shop-by-colour",
+  "/shop-by-mood",
+  "/kit-builder",
+  "/the-kozy-story",
+  "/founders-note",
+  "/about-us",
+  "/b2b-enquiries",
+  "/contact",
+  "/blogs",
+];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const routesMap = ["", "/blogs"].map((route) => ({
-    url: `${baseUrl}${route}`,
-    lastModified: new Date().toISOString(),
-  }));
+  const now = new Date().toISOString();
 
-  const collectionsPromise = getCollections().then((collections) =>
-    collections.map((collection) => ({
-      url: `${baseUrl}${collection.path}`,
-      lastModified: collection.updatedAt,
-    })),
-  );
+  // One failing source drops its own URLs, not the whole sitemap - it used
+  // to rethrow and 500.
+  const settled = await Promise.allSettled([
+    getCollections().then((collections) =>
+      collections.map((c) => ({ path: c.path, lastModified: c.updatedAt })),
+    ),
+    getProducts({}).then((products) =>
+      products.map((p) => ({
+        path: `/product/${p.handle}`,
+        lastModified: p.updatedAt,
+      })),
+    ),
+    getPages().then((pages) =>
+      pages.map((p) => ({ path: `/${p.handle}`, lastModified: p.updatedAt })),
+    ),
+    getBlogs().then((blogs) =>
+      blogs.map((b) => ({ path: b.path, lastModified: now })),
+    ),
+    getArticles(100).then((articles) =>
+      articles.map((a) => ({ path: a.path, lastModified: a.publishedAt })),
+    ),
+  ]);
 
-  const productsPromise = getProducts({}).then((products) =>
-    products.map((product) => ({
-      url: `${baseUrl}/product/${product.handle}`,
-      lastModified: product.updatedAt,
-    })),
-  );
+  const entries = [
+    ...STATIC_ROUTES.map((path) => ({ path, lastModified: now })),
+    ...settled.flatMap((result) => {
+      if (result.status === "fulfilled") return result.value;
+      console.error("sitemap: a source failed", result.reason);
+      return [];
+    }),
+  ];
 
-  const pagesPromise = getPages().then((pages) =>
-    pages.map((page) => ({
-      url: `${baseUrl}/${page.handle}`,
-      lastModified: page.updatedAt,
-    })),
-  );
-
-  const blogsPromise = getBlogs().then((blogs) =>
-    blogs.map((blog) => ({
-      url: `${baseUrl}${blog.path}`,
-      lastModified: new Date().toISOString(),
-    })),
-  );
-
-  const articlesPromise = getArticles(100).then((articles) =>
-    articles.map((article) => ({
-      url: `${baseUrl}${article.path}`,
-      lastModified: article.publishedAt,
-    })),
-  );
-
-  let fetchedRoutes: Route[] = [];
-
-  try {
-    fetchedRoutes = (
-      await Promise.all([
-        collectionsPromise,
-        productsPromise,
-        pagesPromise,
-        blogsPromise,
-        articlesPromise,
-      ])
-    ).flat();
-  } catch (error) {
-    throw JSON.stringify(error, null, 2);
-  }
-
-  return [...routesMap, ...fetchedRoutes];
+  // Some Shopify pages are shadowed by routes of the same name here
+  // (/founders-note, /b2b-enquiries); list each URL once.
+  const seen = new Set<string>();
+  return entries.flatMap(({ path, lastModified }) => {
+    const url = `${SITE_URL}${path}`;
+    if (seen.has(url)) return [];
+    seen.add(url);
+    return [{ url, lastModified }];
+  });
 }

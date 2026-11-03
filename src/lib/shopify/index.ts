@@ -1663,10 +1663,13 @@ export async function revalidate(req: NextRequest): Promise<NextResponse> {
   return NextResponse.json({ status: 200, revalidated: true, now: Date.now() });
 }
 
+// Pages ride on the same TTL as everything else. They were `no-store`, and a
+// `no-store` fetch during render makes the whole route dynamic - so every
+// `/[page]` view, including every bot probing `/wp-login.php`, rendered on a
+// function instead of coming out of the CDN.
 export async function getPage(handle: string): Promise<Page> {
   const res = await shopifyFetch<ShopifyPageOperation>({
     query: getPageQuery,
-    cache: "no-store",
     variables: { handle },
   });
 
@@ -1676,7 +1679,6 @@ export async function getPage(handle: string): Promise<Page> {
 export async function getPages(): Promise<Page[]> {
   const res = await shopifyFetch<ShopifyPagesOperation>({
     query: getPagesQuery,
-    cache: "no-store",
   });
 
   return removeEdgesAndNodes(res.body.data.pages);

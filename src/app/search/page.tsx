@@ -1,11 +1,22 @@
+import type { Metadata } from "next";
 import ShopView from "@/components/shop/shop-view";
+import { queryPageMetadata } from "@/lib/shop/seo";
 import { site } from "@/lib/site";
 
-export const metadata = {
-  title: "Shop Kollection",
-  description:
-    "Search craft-led, konscious textiles from Kozy Living - waffle weave, slub cotton, linen blends and Dabu hand-block prints.",
-};
+type Search = { [key: string]: string | string[] | undefined };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<Search>;
+}): Promise<Metadata> {
+  return {
+    title: "Shop Kollection",
+    description:
+      "Search craft-led, konscious textiles from Kozy Living - waffle weave, slub cotton, linen blends and Dabu hand-block prints.",
+    ...queryPageMetadata("/search", await searchParams),
+  };
+}
 
 export default async function SearchPage({
   searchParams,

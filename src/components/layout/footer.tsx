@@ -6,7 +6,7 @@ import {
 } from "@/lib/shopify";
 import type { Menu } from "@/lib/shopify/types";
 import Image from "next/image";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 import BackToTop from "@/components/ui/back-to-top";
 import WordmarkBand from "@/components/ui/wordmark-band";

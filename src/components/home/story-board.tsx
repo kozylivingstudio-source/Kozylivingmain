@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import gsap from "gsap";
 import { Flip } from "gsap/Flip";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { HiArrowLeft, HiArrowRight, HiArrowUpRight } from "react-icons/hi2";

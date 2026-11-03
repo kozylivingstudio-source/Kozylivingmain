@@ -3,15 +3,16 @@
 import { Cart, ProductVariant } from "@/lib/shopify/types";
 import {
   createContext,
-  use,
+  startTransition,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useOptimistic,
   useRef,
   useState,
 } from "react";
-import type { CartActionState } from "./actions";
+import { readCart, type CartActionState } from "./actions";
 import {
   cartReducer,
   clampQuantity,
@@ -82,18 +83,55 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 /* -------------------------------- provider ------------------------------- */
 
-export function CartProvider({
-  children,
-  cartPromise,
-}: {
-  children: React.ReactNode;
-  cartPromise: Promise<Cart | undefined>;
-}) {
-  const initialCart = use(cartPromise);
+/**
+ * The cart is read by the BROWSER, not handed down by the root layout.
+ *
+ * It used to be a promise from the layout, which read the `cartId` cookie -
+ * and that one `cookies()` call made every page on the site render per
+ * request, uncacheable. Bots walking the shop then spent the Hobby plan's
+ * Fast Origin Transfer in two days and the deployment was paused (Nov 2026).
+ * With the read here, pages are static/ISR and served from the CDN.
+ *
+ * The base cart is state, refreshed by `readCart()`:
+ *   - once on mount (the root layout mounts once per page load),
+ *   - on a bfcache restore (Back from Shopify checkout),
+ *   - after every mutation, inside `runCartMutation`.
+ *
+ * The post-mutation refresh is set inside `startTransition`. While an async
+ * action is pending, React 19 entangles transition updates with it, so the
+ * fresh cart commits in the same render that drops the optimistic state -
+ * exactly what the layout's re-rendered RSC payload used to do. Set outside
+ * a transition, it would land mid-action and the optimistic ADD would be
+ * replayed on top of a cart that already holds the line (a double count).
+ */
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [baseCart, setBaseCart] = useState<Cart | undefined>(undefined);
   const [optimisticCart, updateOptimisticCart] = useOptimistic(
-    initialCart,
+    baseCart,
     cartReducer
   );
+
+  // A failed read keeps the cart already on screen: a Shopify hiccup must
+  // not make a full cart look empty.
+  const refreshCart = useCallback(async () => {
+    let fresh: Cart | undefined;
+    try {
+      fresh = await readCart();
+    } catch (error) {
+      console.error("Failed to load cart", error);
+      return;
+    }
+    startTransition(() => setBaseCart(fresh));
+  }, []);
+
+  useEffect(() => {
+    void refreshCart();
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) void refreshCart();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [refreshCart]);
   const [pendingCount, setPendingCount] = useState(0);
   const [status, setStatus] = useState<CartActionState>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -127,9 +165,25 @@ export function CartProvider({
 
   const runCartMutation = useCallback(<T,>(task: () => Promise<T>): Promise<T> => {
     syncPending(1);
-    const run = queueRef.current.then(task, task).finally(() => {
-      syncPending(-1);
-    });
+    // The re-read runs inside the chain, before the caller's await returns,
+    // so it belongs to the caller's action (see the note on the provider) and
+    // a later mutation never reads ahead of an earlier one. It runs on
+    // failure too: a failed add can still have changed the cart.
+    const run = queueRef.current
+      .then(task, task)
+      .then(
+        async (result) => {
+          await refreshCart();
+          return result;
+        },
+        async (error: unknown) => {
+          await refreshCart();
+          throw error;
+        }
+      )
+      .finally(() => {
+        syncPending(-1);
+      });
     // Swallow rejections on the chain itself so one failure cannot poison every
     // later mutation; the caller still sees its own rejection.
     queueRef.current = run.then(
@@ -137,7 +191,7 @@ export function CartProvider({
       () => undefined
     );
     return run;
-  }, [syncPending]);
+  }, [syncPending, refreshCart]);
 
   const reserveLineQuantity = useCallback(
     (lineId: string, delta: number, current: number) => {

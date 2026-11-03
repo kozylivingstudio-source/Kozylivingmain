@@ -39,7 +39,7 @@ import {
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useLenis } from "lenis/react";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 /* ---------------------------------------------------------------------------

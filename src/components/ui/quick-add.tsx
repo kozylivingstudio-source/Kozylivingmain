@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { addItem } from "../cart/actions";
 import { useCart } from "../cart/cart-context";
 import { Product } from "@/lib/shopify/types";

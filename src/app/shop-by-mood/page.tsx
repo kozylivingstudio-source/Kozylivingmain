@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { redirect } from "next/navigation";
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
@@ -26,6 +26,7 @@ import {
   toParamMap,
   type ShopSearchParams,
 } from "@/lib/shop/filters";
+import { queryPageMetadata } from "@/lib/shop/seo";
 import { isMobileRequest } from "@/lib/shop/viewport";
 import {
   MOOD_PARAM,
@@ -72,10 +73,17 @@ import { shelfPaging, shopByMood as copy } from "@/lib/site";
 const GRID_SIZES =
   "(min-width: 1280px) 22vw, (min-width: 1024px) 30vw, (min-width: 640px) 45vw, 100vw";
 
-export const metadata: Metadata = {
-  title: copy.metaTitle,
-  description: copy.metaDescription,
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams?: Promise<ShopSearchParams>;
+}): Promise<Metadata> {
+  return {
+    title: copy.metaTitle,
+    description: copy.metaDescription,
+    ...queryPageMetadata("/shop-by-mood", await searchParams),
+  };
+}
 
 const pad = (value: number) => String(value).padStart(2, "0");
 

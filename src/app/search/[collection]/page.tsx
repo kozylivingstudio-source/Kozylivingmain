@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ShopView from "@/components/shop/shop-view";
+import { queryPageMetadata } from "@/lib/shop/seo";
 import { getCollections } from "@/lib/shopify";
 import type { Collection } from "@/lib/shopify/types";
 import { site } from "@/lib/site";
@@ -19,8 +20,10 @@ async function findCollection(handle: string): Promise<Collection | undefined> {
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: {
   params: Promise<{ collection: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
   const { collection: handle } = await params;
   const collection = await findCollection(handle);
@@ -33,6 +36,7 @@ export async function generateMetadata({
       collection.seo?.description ||
       collection.description ||
       `${collection.title} from ${site.name}.`,
+    ...queryPageMetadata(collection.path, await searchParams),
   };
 }
 

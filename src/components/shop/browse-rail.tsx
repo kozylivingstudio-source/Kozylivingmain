@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 import { useEffect, useRef } from "react";
 import { useHorizontalScrollPassthrough } from "@/hooks/use-horizontal-scroll-passthrough";

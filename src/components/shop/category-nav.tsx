@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
 import { useEffect, useRef } from "react";

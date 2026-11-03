@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import type { Swatch } from "@/lib/shop/colours";
 
@@ -38,6 +38,7 @@ export default function ActiveFilters({
           href={filter.href}
           scroll={false}
           prefetch={false}
+          rel="nofollow"
           className="ui-mono group inline-flex items-center gap-2 rounded-chip border border-ink/15 bg-card py-1.5 pl-3.5 pr-2.5 transition-colors hover:border-ink hover:bg-ink hover:text-paper"
         >
           <span className="sr-only">Remove filter </span>

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { ArrowUpRightIcon } from "@heroicons/react/24/outline";
 import { redirect } from "next/navigation";
 import Grid from "@/components/grid";

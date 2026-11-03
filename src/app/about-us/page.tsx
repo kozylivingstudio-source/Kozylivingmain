@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import ActionButton from "@/components/ui/action-button";
 import { Metadata } from "next";
 import Breadcrumb from "@/components/ui/breadcrumb";

@@ -12,7 +12,7 @@ import { LineVariantSelect } from "./line-variant-select";
 import { useCart } from "./cart-context";
 import { createUrl } from "@/lib/utils";
 import Image from "@/components/ui/shop-image";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import Price from "../price";
 import OpenCart from "./open-cart";
 import { XMarkIcon } from "@heroicons/react/24/outline";

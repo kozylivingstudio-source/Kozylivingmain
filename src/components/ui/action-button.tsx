@@ -3,7 +3,7 @@
 import { useGSAP } from "@gsap/react";
 import clsx from "clsx";
 import gsap from "gsap";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useRef } from "react";
 
 gsap.registerPlugin(useGSAP);

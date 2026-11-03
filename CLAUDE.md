@@ -1034,12 +1034,19 @@ it.
 - New photographic surfaces go through `Plate`; new CTAs through
   `ActionButton`; new rails through `.rail` or `Carousel`. A remote image
   outside `Plate` imports `Image` from `@/components/ui/shop-image`.
+- **`Link` is imported from `@/components/ui/intent-link`, never from
+  `next/link`.** It prefetches on hover / focus / touch instead of on sight
+  (§17). Do not pass a bare `prefetch` (= `true`) except to a static route
+  that is worth it (the logo to `/`): on a dynamic route `true` is a full
+  server render per link per page view.
 - **Never point a `<Link>` at a route handler.** `<Link>` prefetches, and a
   prefetch is a real GET: `/api/auth/logout` deletes every customer cookie on
   GET, so the "Sign out" `ActionButton` signed customers out the moment it
   scrolled into view in production, and the header's sign-in link minted a new
   PKCE verifier on every page view. `ActionButton` now renders a plain `<a>`
-  for `/api/` hrefs; anywhere else, use `<a>` or `prefetch={false}`.
+  for `/api/` hrefs; anywhere else, use `<a>` or `prefetch={false}`. (The
+  header's account link now always goes to `/account`, which shows the
+  sign-in panel to signed-out visitors - §17.)
 - Layouts that *reorder* between breakpoints get an explicit
   `grid-template-areas` map in `globals.css` (`.hero-bento`, `.story-grid`),
   not a pile of `order-*` utilities.
@@ -1529,6 +1536,66 @@ rules are `lib/shop/size-chart.ts`, the drawer
 - With a guide, that option's legend goes `sr-only` and a flex row carries
   the visible label and the link. Absolutely pinning the link against the
   fieldset ran it into the first row of pills below desktop.
+
+## 17. Caching and crawl budget — why the Hobby deployment was paused
+
+Launched 2026-11-01; paused by Vercel on 2026-11-02 for **Fast Origin
+Transfer** (function → CDN bytes): ~40 GB against Hobby's 10 GB/month fair
+use, 99.6% in `iad1`. That region is where the **functions** run (Vercel's
+default), not where visitors are. No ads were running.
+
+The cause, measured on a local production build:
+
+- **Every route rendered per request.** The root layout read `cookies()` for
+  the cart and the Navbar read it for the account link; either one makes
+  every page dynamic (`private, no-store`). Nothing came from the CDN.
+- **Each render is heavy**: `/` 798 KB, `/search` 656 KB, a product 466 KB
+  (uncompressed, which is what the function sends).
+- **The shop's URL space is unbounded.** Filters are plain links (§6) and
+  facets stack (`?size=s-m%2Cl-xl&sleeve-detail=…&sort=…&page=…` × every
+  collection). robots.txt blocked nothing, and the sitemap listed
+  `demo-next-store.pages.dev` URLs. Crawlers walked it.
+- **Links prefetched on sight.** The desktop menu, product cards and table
+  forced `prefetch` (= full render); scrolling the homepage fetched ~1 MB of
+  product pages nobody opened.
+
+What changed, and the rules that keep it fixed:
+
+- **Nothing rendered on every page may read `cookies()` / `headers()` or make
+  a `no-store` fetch** (root layout, Navbar, Footer, NewsletterBand). The
+  cart is read by the browser: `CartProvider` calls the `readCart()` server
+  action on mount, on a bfcache restore, and after every mutation inside
+  `runCartMutation`, setting it in `startTransition` so it commits with the
+  action (React 19 entangles it) and the optimistic line is never counted
+  twice. Cart actions no longer call `updateTag`: it re-rendered the whole
+  route into each action response. The header's account icon always links
+  to `/account`. `getPage` / `getPages` use the normal TTL, not `no-store`.
+- **Check `next build` after any change to shared chrome.** `/`, the content
+  pages, `/product/[handle]`, `/[page]`, `/policies/[policy]` and blog
+  articles must be `○` / `●`, not `ƒ`. Dynamic segments get on-demand ISR
+  from `revalidate` + `generateStaticParams() { return [] }`. Still `ƒ` on
+  purpose: `/account`, and the pages that read `searchParams` (`/search`,
+  `/search/[collection]`, `/shop-by-*`, `/kit-builder`).
+- **Crawlers stay off query strings.** `robots.ts` disallows `/*?` (with
+  `/_next/` allowed back, or Googlebot cannot render), `/api/` and `/account`,
+  and turns away AI-training and SEO-tool crawlers. Every query-driven page
+  builds its metadata with `queryPageMetadata()` (`lib/shop/seo.ts`):
+  canonical to the bare page, and `noindex, nofollow` once any parameter is
+  set. Filter, sort and page links carry `rel="nofollow"`. `SITE_URL`
+  (`lib/site-url.ts`) is the one origin for metadata, robots and sitemap.
+- **`Link` is `@/components/ui/intent-link`** (all imports were swapped). It
+  holds `prefetch={false}` until hover / focus / touch, then hands Next its
+  default. Scrolling the homepage now sends one 0.6 KB request instead of 11
+  (~1 MB). Next 16's `false` really is off - it never registers the link -
+  so an explicit `prefetch={false}` (the shop's filter links) stays off even
+  on hover.
+- **There is no middleware, on purpose.** A `middleware.ts` / `proxy.ts` puts
+  a function invocation in front of every matched request. If one is ever
+  added, its `matcher` must exclude `_next/static`, `_next/image`, and files
+  with an extension.
+- **Outside the repo (dashboard):** Firewall → Bot Protection and the AI Bots
+  managed ruleset on; function region `bom1` for Indian shoppers. Hobby is
+  for non-commercial use, so a live shop belongs on Pro with a spend limit.
 
 # This is NOT the Next.js you know
 

@@ -6,6 +6,12 @@ import { site } from "@/lib/site";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+// On-demand ISR - see the note in `app/[page]/page.tsx`.
+export const revalidate = 60;
+export function generateStaticParams() {
+  return [];
+}
+
 /**
  * A Shopify shop policy, at the path Shopify itself uses for it, so a menu
  * item of type SHOP_POLICY (`/policies/privacy-policy`) lands here unchanged.

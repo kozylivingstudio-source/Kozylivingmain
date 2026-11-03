@@ -6,6 +6,15 @@ import { site } from "@/lib/site";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+// On-demand ISR: nothing is built ahead, each handle renders on its first
+// visit and is then served from the CDN, refreshed at most once a minute
+// (the Shopify fetch TTL). An empty list is what enables this - see
+// "All paths at runtime" in Next's generateStaticParams docs.
+export const revalidate = 60;
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({
   params,
 }: {

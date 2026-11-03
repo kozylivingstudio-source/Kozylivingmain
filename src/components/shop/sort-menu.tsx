@@ -2,7 +2,7 @@
 
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/outline";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 
 export type SortOption = {
@@ -44,6 +44,7 @@ export default function SortMenu({ options }: { options: SortOption[] }) {
               href={option.href}
               scroll={false}
               prefetch={false}
+              rel="nofollow"
               aria-current={option.active ? "true" : undefined}
               className={clsx(
                 "ui-mono block rounded-chip px-3 py-2 data-[focus]:bg-wash",

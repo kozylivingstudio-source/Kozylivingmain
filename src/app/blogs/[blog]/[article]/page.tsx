@@ -1,5 +1,5 @@
 import Image from "@/components/ui/shop-image";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Prose from "@/components/prose";
@@ -9,6 +9,10 @@ import { getArticle, getBlog } from "@/lib/shopify";
 import { site } from "@/lib/site";
 
 export const revalidate = 3600;
+// On-demand ISR - see the note in `app/[page]/page.tsx`.
+export function generateStaticParams() {
+  return [];
+}
 
 type Params = Promise<{ blog: string; article: string }>;
 

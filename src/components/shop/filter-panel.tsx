@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 import { CheckIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
 import type { PriceBounds } from "@/lib/shop/facets";
@@ -113,6 +113,7 @@ function BrowseRow({ item }: { item: BrowseItem }) {
         href={item.href}
         scroll={false}
         prefetch={false}
+        rel="nofollow"
         aria-current={item.active ? "page" : undefined}
         className={clsx(
           "ui-mono group/row flex items-start gap-2.5 py-1.5 transition-colors",
@@ -219,6 +220,7 @@ function ValueRow({ value }: { value: PanelValue }) {
         href={value.href}
         scroll={false}
         prefetch={false}
+        rel="nofollow"
         aria-current={value.active ? "true" : undefined}
         className={clsx(
           "ui-mono group/row flex items-start gap-2.5 py-1.5 transition-colors",

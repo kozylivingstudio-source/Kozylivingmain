@@ -1,7 +1,7 @@
 "use client";
 
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { useState } from "react";
 import Plate from "@/components/ui/plate";
 

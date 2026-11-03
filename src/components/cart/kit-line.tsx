@@ -6,7 +6,7 @@ import { kitCode } from "@/lib/shop/kit";
 import type { CartItem } from "@/lib/shopify/types";
 import { kitBuilder as kitCopy } from "@/lib/site";
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import Price from "../price";
 import { fromMinor, lineTotalMinor, visibleAttributes } from "./cart-math";
 import { DeleteItemButton } from "./delete-item-button";

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import clsx from "clsx";
 import Plate from "@/components/ui/plate";
 import { Article } from "@/lib/shopify/types";

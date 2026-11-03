@@ -2,7 +2,7 @@
 
 import clsx from "clsx";
 import { useLenis } from "lenis/react";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import {
   createContext,
   useContext,

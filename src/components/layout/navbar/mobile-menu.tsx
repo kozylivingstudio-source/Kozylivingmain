@@ -10,7 +10,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
-import Link from "next/link";
+import Link from "@/components/ui/intent-link";
 import { usePathname } from "next/navigation";
 import { Fragment, useId, useState } from "react";
 import { SearchBar } from "./search";
