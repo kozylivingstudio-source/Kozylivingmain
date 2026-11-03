@@ -2,6 +2,7 @@ import Prose from "@/components/prose";
 import clsx from "clsx";
 import { displayFace, Eyebrow } from "@/components/ui/section";
 import { getPage } from "@/lib/shopify";
+import { isPossibleHandle } from "@/lib/shopify/handle";
 import { site } from "@/lib/site";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -21,6 +22,7 @@ export async function generateMetadata({
   params: Promise<{ page: string }>;
 }): Promise<Metadata> {
   const { page: handle } = await params;
+  if (!isPossibleHandle(handle)) return notFound();
   const page = await getPage(handle);
 
   if (!page) return notFound();
@@ -42,6 +44,7 @@ export default async function Page({
   params: Promise<{ page: string }>;
 }) {
   const { page: handle } = await params;
+  if (!isPossibleHandle(handle)) return notFound();
   const page = await getPage(handle);
 
   if (!page) return notFound();

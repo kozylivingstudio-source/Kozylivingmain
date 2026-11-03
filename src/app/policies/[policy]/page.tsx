@@ -2,6 +2,7 @@ import Prose from "@/components/prose";
 import clsx from "clsx";
 import { displayFace, Eyebrow } from "@/components/ui/section";
 import { getShopPolicy } from "@/lib/shopify";
+import { isPossibleHandle } from "@/lib/shopify/handle";
 import { site } from "@/lib/site";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -26,6 +27,7 @@ export async function generateMetadata({
   params: Promise<{ policy: string }>;
 }): Promise<Metadata> {
   const { policy: handle } = await params;
+  if (!isPossibleHandle(handle)) notFound();
   const policy = await getShopPolicy(handle);
 
   if (!policy) return notFound();
@@ -39,6 +41,7 @@ export default async function PolicyPage({
   params: Promise<{ policy: string }>;
 }) {
   const { policy: handle } = await params;
+  if (!isPossibleHandle(handle)) notFound();
   const policy = await getShopPolicy(handle);
 
   if (!policy) return notFound();

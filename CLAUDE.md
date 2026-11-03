@@ -1593,6 +1593,28 @@ What changed, and the rules that keep it fixed:
   a function invocation in front of every matched request. If one is ever
   added, its `matcher` must exclude `_next/static`, `_next/image`, and files
   with an extension.
+- **Vercel's image optimiser is for local files only** (`next.config.js`).
+  Shopify photos go through `ShopImage` → Shopify's CDN, so
+  `remotePatterns` lists only this project's two Shopify file prefixes
+  (live `0978/6723/5641`, dev `0700/6476/7047` for the `site.ts` stills -
+  **keep the dev store**). It used to allow every Shopify store's files and
+  `**.myshopify.com`, i.e. a free resizer on our metered quota. WebP only,
+  31-day cache, no 3840 width (a duplicate of the 2048 cap).
+- **`public/` files get a week of browser cache** (`headers()` in
+  `next.config.js`). Biggest: `public/media/hero-main.mp4` (6.3 MB), the
+  first hero film. Every other film is on Shopify's CDN; this one should
+  be too (upload in Admin → Content → Files, swap the URL in `heroFilms`).
+- **`/api/search` is CDN-cached** (`s-maxage=300`) and caps `q` at 80
+  characters. Results are the same for everyone.
+- **Dynamic routes check `isPossibleHandle()`** (`lib/shopify/handle.ts`)
+  before asking Shopify. `/[page]` is a root catch-all, so every scanner
+  probe (`/wp-login.php`, `/.env`) lands there.
+- **Preview deployments serve `Disallow: /`** (`VERCEL_ENV` in `robots.ts`).
+- **Shopify side:** `shop.kozyliving.in` is Shopify's primary domain (and
+  checkout) and runs the `Forward to headless` theme, which JS-redirects to
+  `kozyliving.in`. While Vercel is down that sends shoppers to a dead site.
+  The runtime Admin app holds nearly every Admin scope (themes, orders,
+  payments); the site needs only metaobjects + customers.
 - **Outside the repo (dashboard):** Firewall → Bot Protection and the AI Bots
   managed ruleset on; function region `bom1` for Indian shoppers. Hobby is
   for non-commercial use, so a live shop belongs on Pro with a spend limit.

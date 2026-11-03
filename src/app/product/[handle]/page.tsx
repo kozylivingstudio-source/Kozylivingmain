@@ -15,6 +15,7 @@ import {
   getProductRecommendations,
   getProductSizeChart,
 } from "@/lib/shopify";
+import { isPossibleHandle } from "@/lib/shopify/handle";
 import { Image } from "@/lib/shopify/types";
 import { featureBand, site } from "@/lib/site";
 import { Metadata } from "next";
@@ -38,6 +39,7 @@ export async function generateMetadata({
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const { handle } = await params;
+  if (!isPossibleHandle(handle)) notFound();
   const product = await getProduct(handle);
 
   if (!product) return notFound();
@@ -63,6 +65,7 @@ export default async function ProductPage({
   params: Promise<{ handle: string }>;
 }) {
   const { handle } = await params;
+  if (!isPossibleHandle(handle)) notFound();
   // In parallel: the add-ons are one store-wide query and the size chart one
   // small lookup, both cached on the same TTL as the product, so they cost
   // the page no extra wait.

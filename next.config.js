@@ -26,6 +26,10 @@ module.exports = {
   images: {
     formats: ["image/webp"],
     minimumCacheTTL: 2678400,
+    // Next's default list ends at 3840, but `ShopImage` caps every width at
+    // 2048 (the fragment's own cap), so a 3840 candidate was a second copy of
+    // the 2048 URL in every srcset - a few KB per page across ~1,200 URLs.
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     remotePatterns: SHOPIFY_STORE_FILES.map((pathname) => ({
       protocol: "https",
       hostname: "cdn.shopify.com",

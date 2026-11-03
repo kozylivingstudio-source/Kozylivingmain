@@ -22,13 +22,27 @@ export type SearchResult = {
   }[];
 };
 
+/**
+ * The answer is the same for every visitor, so Vercel's CDN may keep it: a
+ * popular query ("robe", "slippers") is one function call per 5 minutes
+ * rather than one per keystroke-pause per shopper. It was `no-store`. The
+ * query string is part of the CDN's cache key, so each query caches apart.
+ */
+const CACHE_HEADERS = {
+  "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
+  "X-Robots-Tag": "noindex",
+};
+
+/** Long enough for any real search; a 5 KB `q` is someone probing. */
+const MAX_QUERY_LENGTH = 80;
+
 export async function GET(req: NextRequest): Promise<NextResponse> {
-  const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
+  const q = (req.nextUrl.searchParams.get("q")?.trim() ?? "").slice(0, MAX_QUERY_LENGTH);
 
   if (!q) {
     return NextResponse.json<SearchResult>(
       { products: [], collections: [], pages: [] },
-      { headers: { "Cache-Control": "no-store" } }
+      { headers: CACHE_HEADERS }
     );
   }
 
@@ -74,6 +88,6 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json<SearchResult>(
     { products, collections, pages },
-    { headers: { "Cache-Control": "no-store" } }
+    { headers: CACHE_HEADERS }
   );
 }

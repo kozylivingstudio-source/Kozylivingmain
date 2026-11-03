@@ -49,6 +49,13 @@ const BLOCKED_BOTS = [
 ];
 
 export default function robots(): MetadataRoute.Robots {
+  // A preview deployment is a full copy of the store on a `*.vercel.app`
+  // host, and it bills the same quota. Nothing should crawl it.
+  // (`VERCEL_ENV` is set at build time; it is unset locally.)
+  if (process.env.VERCEL_ENV && process.env.VERCEL_ENV !== "production") {
+    return { rules: [{ userAgent: "*", disallow: "/" }] };
+  }
+
   return {
     rules: [
       {
